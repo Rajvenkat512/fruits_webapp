@@ -1,0 +1,7 @@
+
+> fruits-app@1.0.0 start
+> expo start
+
+Starting project at D:\Fruits app
+env: load .env
+env: export EXPO_PUBLIC_API_URL EXPO_PUBLIC_API_BASE_PATH

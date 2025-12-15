@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Fruits App",
+    "slug": "fruits-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+
+    "icon": "./assets/images/logo2.png",
+
+    "assetBundlePatterns": ["**/*"],
+
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fruitsapp.mobile"
+    },
+
+    "android": {
+      "package": "com.fruitsapp.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/logo2.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+
+    "web": {
+      "favicon": "./assets/images/favicon.png"
+    },
+
+    "scheme": "fruitsapp",
+
+    "experiments": {
+      "tsconfigPaths": true
+    }
+  }
+}
