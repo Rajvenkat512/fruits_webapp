@@ -5,16 +5,14 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-
     "icon": "./assets/images/logo2.png",
-
-    "assetBundlePatterns": ["**/*"],
-
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.fruitsapp.mobile"
     },
-
     "android": {
       "package": "com.fruitsapp.mobile",
       "adaptiveIcon": {
@@ -22,15 +20,18 @@
         "backgroundColor": "#ffffff"
       }
     },
-
     "web": {
       "favicon": "./assets/images/favicon.png"
     },
-
     "scheme": "fruitsapp",
-
     "experiments": {
       "tsconfigPaths": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5fbf92c4-dfb1-4cab-9309-56c40bebabea"
+      }
+    },
+    "owner": "venkatnaidu"
   }
 }
