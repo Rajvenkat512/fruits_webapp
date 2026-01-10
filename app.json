@@ -32,6 +32,9 @@
         "projectId": "5fbf92c4-dfb1-4cab-9309-56c40bebabea"
       }
     },
-    "owner": "venkatnaidu"
+    "owner": "venkatnaidu",
+    "plugins": [
+      "expo-router"
+    ]
   }
 }
