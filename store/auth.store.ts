@@ -42,7 +42,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
     } catch (error: any) {
       let errorMessage = "Login failed";
-      
+
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message) {
@@ -52,7 +52,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       } else if (error.code === "ETIMEDOUT") {
         errorMessage = "Request timeout. Server may be down";
       }
-      
+
       console.error("Login failed:", {
         email,
         error: errorMessage,
@@ -61,7 +61,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         code: error.code,
         message: error.message,
       });
-      
+
       set({
         error: errorMessage,
         isLoading: false,
@@ -97,7 +97,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         status: error.response?.status,
         details: error.response?.data,
       });
-      
+
       set({
         error: errorMessage,
         isLoading: false,

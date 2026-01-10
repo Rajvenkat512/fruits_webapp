@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -12,8 +13,11 @@ import {
   ImageBackground,
   Dimensions,
   TouchableOpacity,
+  StatusBar,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Search } from "lucide-react-native";
 import { Header } from "@/components/Header";
 import { CategoryCard } from "@/components/CategoryCard";
 import { ProductCard } from "@/components/ProductCard";
@@ -21,8 +25,10 @@ import { useAuthStore } from "@/store/auth.store";
 import { useCartStore } from "@/store/cart.store";
 import { useWatchlistStore } from "@/store/watchlist.store";
 import { categoryService, Category } from "@/services/category.service";
+import { bannerService, Banner } from "@/services/banner.service";
 import { productService, Product } from "@/services/product.service";
-import { Colors, Spacing, FontSizes } from "@/constants/theme";
+import { Colors, Spacing, FontSizes, BorderRadius } from "@/constants/theme";
+import { BannerCarousel } from "@/components/BannerCarousel";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -34,14 +40,14 @@ export default function HomeScreen() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [banners, setBanners] = useState<Banner[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    null
-  );
-  const [carouselIndex, setCarouselIndex] = useState(0);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+
 
   const screenWidth = Dimensions.get("window").width;
+  const ITEM_MARGIN = Spacing.sm;
 
   useEffect(() => {
     loadData();
@@ -51,15 +57,17 @@ export default function HomeScreen() {
     loadProducts();
   }, [selectedCategoryId]);
 
+
+
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [categoriesData, productsData] = await Promise.all([
+      const [categoriesData, bannersData] = await Promise.all([
         categoryService.getAll(),
-        productService.getAll(),
+        bannerService.getAll(),
       ]);
       setCategories(categoriesData);
-      setProducts(productsData);
+      setBanners(bannersData);
     } catch (error: any) {
       Alert.alert("Error", error.message || "Failed to load data");
     } finally {
@@ -70,10 +78,19 @@ export default function HomeScreen() {
   const loadProducts = async () => {
     try {
       const params = selectedCategoryId
-        ? { categoryId: selectedCategoryId }
-        : {};
+        ? { categoryId: selectedCategoryId, limit: 50 }
+        : { limit: 50 };
       const productsData = await productService.getAll(params);
-      setProducts(productsData);
+
+      // Deduplicate products based on _id or id
+      const uniqueProducts = Array.from(new Map(productsData.map(item => {
+        // Handle API using 'id' instead of '_id'
+        const uniqueId = item.id || item._id;
+        // Ensure standard _id usage throughout the component
+        const normalizedItem = { ...item, _id: uniqueId };
+        return [uniqueId, normalizedItem];
+      })).values());
+      setProducts(uniqueProducts);
     } catch (error: any) {
       Alert.alert("Error", error.message || "Failed to load products");
     }
@@ -81,27 +98,22 @@ export default function HomeScreen() {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await loadData();
+    await Promise.all([loadData(), loadProducts()]);
     setIsRefreshing(false);
   };
 
-  const handleProductPress = (productId: string) => {
-    router.push(`/products/${productId}`);
-  };
-
+  const handleProductPress = (productId: string) => router.push(`/products/${productId}`);
   const handleCategoryPress = (categoryId: string) => {
-    if (selectedCategoryId === categoryId) {
-      setSelectedCategoryId(null);
-    } else {
-      setSelectedCategoryId(categoryId);
-    }
+    if (selectedCategoryId === categoryId) setSelectedCategoryId(null);
+    else setSelectedCategoryId(categoryId);
   };
 
   const handleAddToCart = async (productId: string) => {
     try {
       await addToCart(productId, 1);
-      Alert.alert("Success", "Added to cart");
-    } catch (error) {
+      // Navigate to cart page
+      router.push("/(tabs)/cart");
+    } catch {
       Alert.alert("Error", "Failed to add to cart");
     }
   };
@@ -109,25 +121,22 @@ export default function HomeScreen() {
   const handleToggleWatchlist = async (productId: string) => {
     try {
       if (isInWatchlist(productId)) {
-        const item = useWatchlistStore.getState().items.find(
-          (item) => item.productId === productId
-        );
-        if (item) {
-          await removeFromWatchlist(item._id);
-        }
+        const item = useWatchlistStore.getState().items.find(i => i.productId === productId);
+        if (item) await removeFromWatchlist(item._id);
       } else {
         await addToWatchlist(productId);
       }
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "Failed to update watchlist");
     }
   };
 
   const handleLogout = async () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
-      { text: "Cancel", onPress: () => {} },
+      { text: "Cancel" },
       {
         text: "Logout",
+        style: "destructive",
         onPress: async () => {
           await logout();
           router.replace("/(auth)/login");
@@ -138,129 +147,92 @@ export default function HomeScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Header title="Fruits App" showCart showWishlist />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-        </View>
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
       </SafeAreaView>
     );
   }
 
+  const numColumns = 2;
+  const ITEM_WIDTH = (screenWidth - Spacing.md * 2 - ITEM_MARGIN) / numColumns;
+
   return (
     <SafeAreaView style={styles.container}>
-      <Header
-        title="Fruits App"
-        showCart
-        showWishlist
-        rightAction={handleLogout}
-      />
-      <FlatList
-        data={[]}
-        ListHeaderComponent={() => (
-          <View>
-            {/* Search Bar */}
-            <View style={styles.searchContainer}>
-              <TextInput
-                placeholder="Search fresh fruits..."
-                placeholderTextColor={Colors.gray}
-                style={styles.searchInput}
-              />
-            </View>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
 
-            {/* Carousel */}
-            <FlatList
-              data={products.slice(0, 4)}
-              horizontal
-              keyExtractor={(item) => item._id}
-              showsHorizontalScrollIndicator={false}
-              pagingEnabled
-              onMomentumScrollEnd={(ev) => {
-                const idx = Math.round(ev.nativeEvent.contentOffset.x / screenWidth);
-                setCarouselIndex(idx);
-              }}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => handleProductPress(item._id)}
-                  style={[styles.bannerCard, { width: screenWidth * 0.8 }]}
-                >
-                  <ImageBackground
-                    source={{ uri: item.image || "https://via.placeholder.com/600" }}
-                    style={styles.bannerImage}
-                    imageStyle={{ borderRadius: 14 }}
-                  >
-                    <View style={styles.bannerOverlay} />
-                    <View style={styles.bannerTextWrap}>
-                      <Text style={styles.bannerTitle}>{item.name}</Text>
-                      <Text style={styles.bannerSubtitle}>{item.price ? `$${item.price.toFixed(2)}` : ""}</Text>
-                    </View>
-                  </ImageBackground>
-                </TouchableOpacity>
-              )}
+      {/* Custom Header Area */}
+      <View style={styles.headerContainer}>
+        <Header title="Fruits App" showCart showWishlist rightAction={handleLogout} />
+
+        {/* Search Bar */}
+        {/* <View style={styles.searchContainer}>
+          <View style={styles.searchBar}>
+            <Search size={20} color={Colors.gray} style={styles.searchIcon} />
+            <TextInput
+              placeholder="Search for fresh fruits..."
+              placeholderTextColor={Colors.gray}
+              style={styles.searchInput}
+              selectionColor={Colors.primary}
             />
+          </View>
+        </View> */}
+      </View>
 
-            {/* Page Indicator */}
-            <View style={styles.indicatorContainer}>
-              {products.slice(0, 4).map((_, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.indicatorDot,
-                    i === carouselIndex && styles.indicatorDotActive,
-                  ]}
-                />
-              ))}
-            </View>
+      <FlatList
+        data={products}
+        keyExtractor={(item, index) => item._id || index.toString()}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={Colors.primary} />}
+        contentContainerStyle={styles.listContent}
+        numColumns={2}
+        columnWrapperStyle={styles.columnWrapper}
+        ListHeaderComponent={() => (
+          <View style={styles.headerComponent}>
+            {/* Carousel */}
+            <BannerCarousel banners={banners} />
 
-            {/* Categories Row */}
-            <View style={styles.categoriesRow}>
+            {/* Categories */}
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>Categories</Text>
               <FlatList
                 data={categories}
                 horizontal
-                keyExtractor={(c) => c._id}
+                keyExtractor={(c, index) => c._id || index.toString()}
                 showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.categoriesList}
                 renderItem={({ item: category }) => (
                   <CategoryCard
                     id={category._id}
                     name={category.name}
                     onPress={() => handleCategoryPress(category._id)}
-                    backgroundColor={Colors.bg}
+                    backgroundColor={selectedCategoryId === category._id ? Colors.primary : Colors.white}
+                    textColor={selectedCategoryId === category._id ? Colors.primary : Colors.dark}
                     small
                   />
                 )}
-                contentContainerStyle={{ paddingHorizontal: 16 }}
               />
             </View>
 
-            {/* Section Title */}
-            <View style={styles.productsSection}>
-              <Text style={styles.sectionTitle}>{selectedCategoryId ? "Filtered Products" : "Recommended"}</Text>
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>
+                  {selectedCategoryId ? "Filtered Products" : "All Products"}
+                </Text>
+                {!selectedCategoryId && (
+                  <TouchableOpacity onPress={() => loadProducts()}>
+                    <Text style={styles.seeAllText}>See All</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           </View>
         )}
-        renderItem={null}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor={Colors.primary}
-          />
-        }
-      />
-
-      {/* Horizontal products carousel */}
-      <View style={styles.horizontalProductsWrap}>
-        <FlatList
-          data={products}
-          horizontal
-          keyExtractor={(p) => p._id}
-          showsHorizontalScrollIndicator={false}
-          renderItem={({ item: product }) => (
+        renderItem={({ item: product }) => (
+          <View style={{ width: ITEM_WIDTH, marginBottom: Spacing.lg }}>
             <ProductCard
               id={product._id}
               name={product.name}
+              description={product.description}
               price={product.price}
               image={product.image || "https://via.placeholder.com/200"}
               stock={product.stock}
@@ -269,11 +241,11 @@ export default function HomeScreen() {
               onToggleWatchlist={() => handleToggleWatchlist(product._id)}
               isInWatchlist={isInWatchlist(product._id)}
               compact
+              style={styles.productCard}
             />
-          )}
-          contentContainerStyle={{ paddingHorizontal: 12 }}
-        />
-      </View>
+          </View>
+        )}
+      />
     </SafeAreaView>
   );
 }
@@ -282,107 +254,155 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.bg,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   loadingContainer: {
     flex: 1,
+    backgroundColor: Colors.bg,
     justifyContent: "center",
     alignItems: "center",
   },
-  categoriesSection: {
-    paddingVertical: Spacing.md,
+  headerContainer: {
+    backgroundColor: Colors.bg,
+    paddingBottom: Spacing.sm,
   },
-  productsSection: {
+  searchContainer: {
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.lg,
+    marginTop: Spacing.xs,
   },
-  sectionTitle: {
-    fontSize: FontSizes.lg,
-    fontWeight: "700",
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.lg,
+    paddingHorizontal: Spacing.md,
+    height: 48,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    shadowColor: Colors.dark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  searchIcon: {
+    marginRight: Spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: FontSizes.md,
     color: Colors.dark,
-    marginHorizontal: Spacing.md,
-    marginBottom: Spacing.md,
-  },
-  columnWrapper: {
-    justifyContent: "space-between",
-    paddingHorizontal: Spacing.xs,
+    height: "100%",
   },
   listContent: {
     paddingBottom: Spacing.xl,
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: Spacing.xxl,
+  headerComponent: {
+    marginBottom: Spacing.sm,
   },
-  emptyText: {
-    fontSize: FontSizes.md,
-    color: Colors.gray,
-  },
-  searchContainer: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-  },
-  searchInput: {
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    fontSize: FontSizes.md,
-    elevation: 2,
+  carouselContainer: {
+    marginTop: Spacing.md,
+    alignItems: 'center',
   },
   bannerCard: {
-    marginHorizontal: 12,
-    borderRadius: 14,
+    height: 190,
+    borderRadius: BorderRadius.md,
     overflow: "hidden",
-    height: 180,
-    marginTop: Spacing.md,
+    backgroundColor: Colors.lightGray,
   },
+
   bannerImage: {
     width: "100%",
     height: "100%",
     justifyContent: "flex-end",
   },
+
   bannerOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.18)",
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "flex-end",
   },
+
   bannerTextWrap: {
     padding: Spacing.md,
   },
+
   bannerTitle: {
     color: Colors.white,
     fontSize: FontSizes.lg,
-    fontWeight: "800",
+    fontWeight: "700",
   },
+
   bannerSubtitle: {
     color: Colors.white,
     fontSize: FontSizes.md,
     marginTop: Spacing.xs,
   },
+
   indicatorContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     marginTop: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   indicatorDot: {
-    width: 8,
-    height: 8,
-    backgroundColor: Colors.gray,
-    borderRadius: 8,
-    marginHorizontal: 6,
+    width: 6,
+    height: 6,
+    backgroundColor: Colors.lightGray,
+    borderRadius: 3,
+    marginHorizontal: 4,
   },
   indicatorDotActive: {
     backgroundColor: Colors.primary,
-    width: 28,
-    borderRadius: 6,
+    width: 20,
+    borderRadius: 3,
   },
-  categoriesRow: {
-    marginTop: Spacing.md,
+  sectionContainer: {
+    marginBottom: Spacing.md,
   },
-  horizontalProductsWrap: {
-    marginTop: Spacing.lg,
-    paddingBottom: Spacing.xl,
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  sectionTitle: {
+    fontSize: FontSizes.lg,
+    fontWeight: "700",
+    color: Colors.dark,
+    paddingHorizontal: Spacing.md,
+  },
+  seeAllText: {
+    fontSize: FontSizes.sm,
+    color: Colors.primary,
+    fontWeight: "600",
+  },
+  categoriesList: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    gap: Spacing.sm, // Works in newer React Native
+  },
+  columnWrapper: {
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.md,
+  },
+  productCard: {
+    width: "100%",
+    marginHorizontal: 0,
+    marginVertical: 0,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 3,
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.md,
   },
 });
+
+

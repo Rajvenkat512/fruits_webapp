@@ -4,9 +4,9 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+  Image,
 } from "react-native";
-import { ChevronLeft, ShoppingCart, Heart } from "lucide-react-native";
+import { ChevronLeft, ShoppingCart, Heart, Share2, LogOut } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useCartStore } from "@/store/cart.store";
 import { useWatchlistStore } from "@/store/watchlist.store";
@@ -17,7 +17,9 @@ interface HeaderProps {
   showBackButton?: boolean;
   showCart?: boolean;
   showWishlist?: boolean;
+  showShare?: boolean;
   rightAction?: () => void;
+  rightIcon?: React.ReactNode;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -25,7 +27,9 @@ export const Header: React.FC<HeaderProps> = ({
   showBackButton = false,
   showCart = false,
   showWishlist = false,
+  showShare = false,
   rightAction,
+  rightIcon,
 }) => {
   const router = useRouter();
   const cartItems = useCartStore((state) => state.items);
@@ -41,9 +45,9 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
-        {/* Left Section */}
+        {/* Left Section - Profile or Back */}
         <View style={styles.leftSection}>
           {showBackButton ? (
             <TouchableOpacity onPress={handleBack} style={styles.backButton}>
@@ -51,29 +55,33 @@ export const Header: React.FC<HeaderProps> = ({
               <ChevronLeft size={24} color={Colors.dark} />
             </TouchableOpacity>
           ) : (
-            <View style={styles.spacer} />
+            <TouchableOpacity onPress={() => router.push("/(tabs)/profile")} style={styles.profileButton}>
+              {/* Placeholder Avatar */}
+              <Image
+                source={{ uri: "https://i.pravatar.cc/150?img=12" }}
+                style={styles.avatar}
+              />
+            </TouchableOpacity>
           )}
         </View>
 
         {/* Center Section */}
-        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.title} numberOfLines={1}>{title}</Text>
 
         {/* Right Section */}
         <View style={styles.rightSection}>
-          {showCart && (
+          {showShare && (
             <TouchableOpacity
               style={styles.iconButton}
-              onPress={() => router.push("/(tabs)/cart")}
+              onPress={rightAction} // Assuming share is the right action if showShare is true, or strictly separate?
+            // Actually typically share is a specific action. I'll make it use rightAction if provided, or a specific prop.
+            // For now, if showShare is true, I'll just render the icon. The 'rightAction' might be for something else.
+            // But usually the rightmost button is 'rightAction'.
+            // Let's assume rightAction is properly passed for the specific button needed.
+            // But wait, the user wants 'share' on product page.
             >
               {/* @ts-ignore */}
-              <ShoppingCart size={24} color={Colors.dark} strokeWidth={1.5} />
-              {cartCount > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>
-                    {cartCount > 99 ? "99+" : cartCount}
-                  </Text>
-                </View>
-              )}
+              <Share2 size={24} color={Colors.dark} strokeWidth={1.5} />
             </TouchableOpacity>
           )}
 
@@ -94,30 +102,52 @@ export const Header: React.FC<HeaderProps> = ({
             </TouchableOpacity>
           )}
 
-          {rightAction && (
+          {showCart && (
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => router.push("/(tabs)/cart")}
+            >
+              {/* @ts-ignore */}
+              <ShoppingCart size={24} color={Colors.dark} strokeWidth={1.5} />
+              {cartCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {cartCount > 99 ? "99+" : cartCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
+
+          {rightAction && !showShare && (
+            // If showShare is false but rightAction exists (like Logout on Home), render it.
             <TouchableOpacity
               onPress={rightAction}
               style={styles.actionButton}
-            />
+            >
+              {rightIcon ? rightIcon : <LogOut size={24} color={Colors.dark} strokeWidth={1.5} />}
+            </TouchableOpacity>
           )}
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.white,
-    borderBottomWidth: 1,
+    borderBottomWidth: 0.5,
     borderBottomColor: Colors.border,
+    // Removed top padding as requested
+    paddingBottom: Spacing.sm,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
+    height: 40, // Slightly reduced height
   },
   leftSection: {
     flex: 1,
@@ -128,17 +158,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
-    gap: Spacing.md,
+    gap: Spacing.xs,
   },
   backButton: {
     padding: Spacing.xs,
   },
-  spacer: {
+  profileButton: {
+    padding: 0,
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+  avatar: {
     width: 36,
+    height: 36,
+    borderRadius: 18,
   },
   title: {
     flex: 2,
-    fontSize: FontSizes.xl,
+    fontSize: FontSizes.lg,
     fontWeight: "700",
     color: Colors.dark,
     textAlign: "center",

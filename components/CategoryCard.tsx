@@ -8,6 +8,7 @@ interface CategoryCardProps {
   icon?: string;
   onPress: () => void;
   backgroundColor?: string;
+  textColor?: string;
   small?: boolean;
 }
 
@@ -17,6 +18,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
   icon,
   onPress,
   backgroundColor,
+  textColor,
   small = false,
 }) => {
   const colors = [
@@ -31,10 +33,10 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
     return (
       <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
         <View style={styles.smallWrap}>
-          <View style={[styles.smallContainer, { backgroundColor: randomBgColor }]}> 
+          <View style={[styles.smallContainer, { backgroundColor: randomBgColor }]}>
             <Text style={styles.smallIcon}>{icon || "🍓"}</Text>
           </View>
-          <Text style={styles.smallLabel}>{name}</Text>
+          <Text style={[styles.smallLabel, textColor ? { color: textColor } : null]}>{name}</Text>
         </View>
       </TouchableOpacity>
     );

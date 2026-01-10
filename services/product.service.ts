@@ -2,6 +2,7 @@ import api from "./api";
 
 export interface Product {
   _id: string;
+  id?: string;
   name: string;
   slug: string;
   description: string;

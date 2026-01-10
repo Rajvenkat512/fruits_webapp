@@ -23,7 +23,11 @@ export const useCartStore = create<CartStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const items = await cartService.getCart();
-      set({ items, isLoading: false });
+      const normalizedItems = items.map(item => ({
+        ...item,
+        _id: item._id || (item as any).id
+      }));
+      set({ items: normalizedItems, isLoading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Failed to fetch cart",
@@ -36,7 +40,20 @@ export const useCartStore = create<CartStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const newItem = await cartService.addToCart({ productId, quantity });
-      set({ items: [...get().items, newItem], isLoading: false });
+      const normalizedItem = { ...newItem, _id: newItem._id || (newItem as any).id };
+
+      const currentItems = get().items;
+      const existingItemIndex = currentItems.findIndex(item => item._id === normalizedItem._id);
+
+      if (existingItemIndex > -1) {
+        // Item exists, update it
+        const updatedItems = [...currentItems];
+        updatedItems[existingItemIndex] = normalizedItem;
+        set({ items: updatedItems, isLoading: false });
+      } else {
+        // Item doesn't exist, append it
+        set({ items: [...currentItems, normalizedItem], isLoading: false });
+      }
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Failed to add item",
@@ -51,9 +68,10 @@ export const useCartStore = create<CartStore>((set, get) => ({
       const updatedItem = await cartService.updateCartItem(itemId, {
         quantity,
       });
+      const normalizedUpdatedItem = { ...updatedItem, _id: updatedItem._id || (updatedItem as any).id };
       set({
         items: get().items.map((item) =>
-          item._id === itemId ? updatedItem : item
+          item._id === itemId ? normalizedUpdatedItem : item
         ),
         isLoading: false,
       });

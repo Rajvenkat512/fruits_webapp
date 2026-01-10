@@ -13,7 +13,7 @@ export default function RootLayout() {
       await restoreToken();
       setIsHydrated(true);
     };
-    
+
     initAuth();
   }, [restoreToken]);
 
@@ -53,6 +53,12 @@ export default function RootLayout() {
           options={{}}
         />
       )}
+      <Stack.Screen
+        name="products"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

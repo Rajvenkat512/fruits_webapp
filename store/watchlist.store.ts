@@ -21,7 +21,12 @@ export const useWatchlistStore = create<WatchlistStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const items = await watchlistService.getWatchlist();
-      set({ items, isLoading: false });
+      // Normalize items to ensure _id is present
+      const normalizedItems = items.map(item => ({
+        ...item,
+        _id: item._id || (item as any).id
+      }));
+      set({ items: normalizedItems, isLoading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Failed to fetch watchlist",
@@ -34,7 +39,8 @@ export const useWatchlistStore = create<WatchlistStore>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const newItem = await watchlistService.addToWatchlist({ productId });
-      set({ items: [...get().items, newItem], isLoading: false });
+      const normalizedItem = { ...newItem, _id: newItem._id || (newItem as any).id };
+      set({ items: [...get().items, normalizedItem], isLoading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Failed to add to watchlist",

@@ -33,7 +33,7 @@ export const cartService = {
 
   // Add item to cart
   addToCart: async (payload: AddToCartPayload): Promise<CartItem> => {
-    const response = await api.post<CartItem>("/admin/cart", payload);
+    const response = await api.post<CartItem>("/cart", payload);
     return response.data;
   },
 
@@ -42,12 +42,12 @@ export const cartService = {
     id: string,
     payload: UpdateCartItemPayload
   ): Promise<CartItem> => {
-    const response = await api.put<CartItem>(`/admin/cart/${id}`, payload);
+    const response = await api.put<CartItem>(`/cart/${id}`, payload);
     return response.data;
   },
 
   // Remove item from cart
   removeFromCart: async (id: string): Promise<void> => {
-    await api.delete(`/admin/cart/${id}`);
+    await api.delete(`/cart/${id}`);
   },
 };

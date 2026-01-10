@@ -7,6 +7,8 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  StatusBar,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Heart } from "lucide-react-native";
@@ -48,7 +50,8 @@ export default function WatchlistScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title="My Wishlist" showBackButton={false} />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
+      <Header title="My Wishlist" showBackButton={false} showCart />
 
       {items.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -101,6 +104,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.bg,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   emptyContainer: {
     flex: 1,

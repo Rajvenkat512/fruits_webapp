@@ -110,7 +110,7 @@ export default function CategoryDetailScreen() {
                 item.image || "https://via.placeholder.com/200?text=No+Image"
               }
               stock={item.stock}
-              onPress={() => {}}
+              onPress={() => { }}
               onAddToCart={() => handleAddToCart(item._id)}
               onToggleWatchlist={() => handleToggleWatchlist(item._id)}
               isInWatchlist={isInWatchlist(item._id)}
