@@ -5,18 +5,14 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "icon": "./assets/images/logo2.png",
+    "icon": "./assets/images/icon.png",
     "assetBundlePatterns": [
       "**/*"
     ],
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.fruitsapp.mobile"
-    },
     "android": {
       "package": "com.fruitsapp.mobile",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo2.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
       }
     },
