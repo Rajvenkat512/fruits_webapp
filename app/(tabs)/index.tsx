@@ -29,9 +29,11 @@ import { bannerService, Banner } from "@/services/banner.service";
 import { productService, Product } from "@/services/product.service";
 import { Colors, Spacing, FontSizes, BorderRadius } from "@/constants/theme";
 import { BannerCarousel } from "@/components/BannerCarousel";
+import { useTheme } from "@/hooks/useTheme";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const logout = useAuthStore((state) => state.logout);
   const addToCart = useCartStore((state) => state.addToCart);
   const addToWatchlist = useWatchlistStore((state) => state.addToWatchlist);
@@ -157,32 +159,19 @@ export default function HomeScreen() {
   const ITEM_WIDTH = (screenWidth - Spacing.md * 2 - ITEM_MARGIN) / numColumns;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
       {/* Custom Header Area */}
-      <View style={styles.headerContainer}>
+      <View style={[styles.headerContainer, { backgroundColor: colors.bg }]}>
         <Header title="Fruits App" showCart showWishlist rightAction={handleLogout} />
-
-        {/* Search Bar */}
-        {/* <View style={styles.searchContainer}>
-          <View style={styles.searchBar}>
-            <Search size={20} color={Colors.gray} style={styles.searchIcon} />
-            <TextInput
-              placeholder="Search for fresh fruits..."
-              placeholderTextColor={Colors.gray}
-              style={styles.searchInput}
-              selectionColor={Colors.primary}
-            />
-          </View>
-        </View> */}
       </View>
 
       <FlatList
         data={products}
         keyExtractor={(item, index) => item._id || index.toString()}
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={Colors.primary} />}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
         contentContainerStyle={styles.listContent}
         numColumns={2}
         columnWrapperStyle={styles.columnWrapper}
@@ -193,7 +182,7 @@ export default function HomeScreen() {
 
             {/* Categories */}
             <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Categories</Text>
+              <Text style={[styles.sectionTitle, { color: colors.dark }]}>Categories</Text>
               <FlatList
                 data={categories}
                 horizontal
@@ -205,8 +194,8 @@ export default function HomeScreen() {
                     id={category._id}
                     name={category.name}
                     onPress={() => handleCategoryPress(category._id)}
-                    backgroundColor={selectedCategoryId === category._id ? Colors.primary : Colors.white}
-                    textColor={selectedCategoryId === category._id ? Colors.primary : Colors.dark}
+                    backgroundColor={selectedCategoryId === category._id ? colors.primary : colors.white}
+                    textColor={selectedCategoryId === category._id ? colors.white : colors.dark}
                     small
                   />
                 )}
@@ -215,12 +204,12 @@ export default function HomeScreen() {
 
             <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>
+                <Text style={[styles.sectionTitle, { color: colors.dark }]}>
                   {selectedCategoryId ? "Filtered Products" : "All Products"}
                 </Text>
                 {!selectedCategoryId && (
                   <TouchableOpacity onPress={() => loadProducts()}>
-                    <Text style={styles.seeAllText}>See All</Text>
+                    <Text style={[styles.seeAllText, { color: colors.primary }]}>See All</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -241,7 +230,7 @@ export default function HomeScreen() {
               onToggleWatchlist={() => handleToggleWatchlist(product._id)}
               isInWatchlist={isInWatchlist(product._id)}
               compact
-              style={styles.productCard}
+              style={[styles.productCard, { backgroundColor: colors.white }]}
             />
           </View>
         )}
@@ -254,7 +243,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.bg,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+    // paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0, // Removed to allow Header to fill top
   },
   loadingContainer: {
     flex: 1,

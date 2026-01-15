@@ -25,9 +25,11 @@ import { Header } from "@/components/Header";
 import { useCartStore } from "@/store/cart.store";
 import { Colors, Spacing, FontSizes, BorderRadius } from "@/constants/theme";
 import { useRouter } from "expo-router";
+import { useTheme } from "@/hooks/useTheme";
 
 export default function CartScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const items = useCartStore((state) => state.items);
   const fetchCart = useCartStore((state) => state.fetchCart);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
@@ -85,9 +87,9 @@ export default function CartScreen() {
   const total = subtotal + deliveryFee + tax - discount;
 
   const renderItem = ({ item }: { item: any }) => (
-    <View style={styles.cartItem}>
+    <View style={[styles.cartItem, { backgroundColor: colors.white }]}>
       {/* Image */}
-      <View style={styles.imageContainer}>
+      <View style={[styles.imageContainer, { backgroundColor: isDark ? '#333' : '#F0F0F0' }]}>
         <Image
           source={{ uri: item.product?.image || "https://via.placeholder.com/150" }}
           style={styles.itemImage}
@@ -96,33 +98,33 @@ export default function CartScreen() {
 
       {/* Content */}
       <View style={styles.itemContent}>
-        <Text style={styles.itemName} numberOfLines={1}>
+        <Text style={[styles.itemName, { color: colors.dark }]} numberOfLines={1}>
           {item.product?.name || "Unknown Product"}
         </Text>
 
         <View style={styles.metaRow}>
-          <Clock size={12} color={Colors.gray} />
-          <Text style={styles.metaText}>15-20 min</Text>
+          <Clock size={12} color={colors.gray} />
+          <Text style={[styles.metaText, { color: colors.gray }]}>15-20 min</Text>
           <View style={styles.metaDivider} />
           <Star size={12} color="#F59E0B" fill="#F59E0B" />
-          <Text style={styles.metaText}>4.9 (1285)</Text>
+          <Text style={[styles.metaText, { color: colors.gray }]}>4.9 (1285)</Text>
         </View>
 
         <View style={styles.priceRow}>
-          <Text style={styles.itemPrice}>
+          <Text style={[styles.itemPrice, { color: colors.dark }]}>
             <Text style={styles.currency}>$</Text> {item.product?.price?.toFixed(2) || "0.00"}
           </Text>
 
           {/* Quantity Selector */}
-          <View style={styles.quantityContainer}>
+          <View style={[styles.quantityContainer, { backgroundColor: isDark ? '#333' : '#F8F8F8' }]}>
             <TouchableOpacity
               onPress={() => handleDecreaseQuantity(item._id, item.quantity)}
-              style={styles.qtyButtonMinus}
+              style={[styles.qtyButtonMinus, { backgroundColor: isDark ? '#555' : colors.white }]}
             >
-              <Minus size={16} color={Colors.dark} />
+              <Minus size={16} color={colors.dark} />
             </TouchableOpacity>
 
-            <Text style={styles.qtyText}>
+            <Text style={[styles.qtyText, { color: colors.dark }]}>
               {item.quantity.toString().padStart(2, '0')}
             </Text>
 
@@ -139,14 +141,16 @@ export default function CartScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
-      <Header
-        title="My Cart List"
-        showBackButton
-        rightIcon={<MoreVertical size={24} color={Colors.dark} />}
-        rightAction={() => { }}
-      />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <View style={[styles.headerContainer, { backgroundColor: colors.bg }]}>
+        <Header
+          title="My Cart List"
+          showBackButton
+          rightIcon={<MoreVertical size={24} color={Colors.white} />}
+          rightAction={() => { }}
+        />
+      </View>
 
       <FlatList
         data={items}
@@ -158,8 +162,8 @@ export default function CartScreen() {
           items.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>🛒</Text>
-              <Text style={styles.emptyTitle}>Your cart is empty</Text>
-              <Text style={styles.emptySubtitle}>
+              <Text style={[styles.emptyTitle, { color: colors.dark }]}>Your cart is empty</Text>
+              <Text style={[styles.emptySubtitle, { color: colors.gray }]}>
                 Add some tasty items to proceed!
               </Text>
             </View>
@@ -169,12 +173,13 @@ export default function CartScreen() {
           items.length > 0 ? (
             <View style={styles.footer}>
               {/* Promo Code */}
-              <View style={styles.promoContainer}>
+              <View style={[styles.promoContainer, { backgroundColor: colors.white }]}>
                 <TextInput
-                  style={styles.promoInput}
+                  style={[styles.promoInput, { color: colors.dark }]}
                   value={promoCode}
                   onChangeText={setPromoCode}
                   placeholder="Promo Code"
+                  placeholderTextColor={colors.gray}
                 />
                 <TouchableOpacity style={styles.promoButton}>
                   <Text style={styles.promoButtonText}>
@@ -184,36 +189,36 @@ export default function CartScreen() {
               </View>
 
               {/* Summary */}
-              <View style={styles.summaryCard}>
-                <Text style={styles.summaryTitle}>Order Summary</Text>
+              <View style={[styles.summaryCard, { backgroundColor: colors.white }]}>
+                <Text style={[styles.summaryTitle, { color: colors.dark }]}>Order Summary</Text>
 
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Order Amount</Text>
-                  <Text style={styles.summaryValue}>${subtotal.toFixed(2)}</Text>
+                  <Text style={[styles.summaryValue, { color: colors.dark }]}>${subtotal.toFixed(2)}</Text>
                 </View>
 
                 {isPromoApplied && (
                   <View style={styles.summaryRow}>
                     <Text style={styles.summaryLabel}>Promo-code</Text>
-                    <Text style={styles.summaryValue}>-${discount.toFixed(2)}</Text>
+                    <Text style={[styles.summaryValue, { color: colors.dark }]}>-${discount.toFixed(2)}</Text>
                   </View>
                 )}
 
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Delivery</Text>
-                  <Text style={styles.summaryValue}>${deliveryFee.toFixed(2)}</Text>
+                  <Text style={[styles.summaryValue, { color: colors.dark }]}>${deliveryFee.toFixed(2)}</Text>
                 </View>
 
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Tax</Text>
-                  <Text style={styles.summaryValue}>${tax.toFixed(2)}</Text>
+                  <Text style={[styles.summaryValue, { color: colors.dark }]}>${tax.toFixed(2)}</Text>
                 </View>
 
-                <View style={[styles.divider, { marginVertical: 15 }]} />
+                <View style={[styles.divider, { marginVertical: 15, backgroundColor: isDark ? '#333' : '#F0F0F0' }]} />
 
                 <View style={styles.summaryRow}>
-                  <Text style={[styles.summaryLabel, styles.totalLabel]}>Total Amount</Text>
-                  <Text style={[styles.summaryValue, styles.totalValue]}>
+                  <Text style={[styles.summaryLabel, styles.totalLabel, { color: colors.dark }]}>Total Amount</Text>
+                  <Text style={[styles.summaryValue, styles.totalValue, { color: colors.dark }]}>
                     <Text style={{ fontSize: 16, color: "#FF7D56" }}>$ </Text>
                     {total.toFixed(2)}
                   </Text>
@@ -238,8 +243,11 @@ export default function CartScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bg, // Light grey bg like mockup
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+    backgroundColor: Colors.bg,
+    // paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+  },
+  headerContainer: {
+    marginBottom: Spacing.sm,
   },
   listContent: {
     padding: Spacing.lg,

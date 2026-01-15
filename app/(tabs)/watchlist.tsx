@@ -15,9 +15,11 @@ import { Heart } from "lucide-react-native";
 import { Header } from "@/components/Header";
 import { useWatchlistStore } from "@/store/watchlist.store";
 import { Colors, Spacing, FontSizes, BorderRadius } from "@/constants/theme";
+import { useTheme } from "@/hooks/useTheme";
 
 export default function WatchlistScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const items = useWatchlistStore((state) => state.items);
   const fetchWatchlist = useWatchlistStore((state) => state.fetchWatchlist);
   const removeFromWatchlist = useWatchlistStore(
@@ -49,16 +51,18 @@ export default function WatchlistScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.bg} />
-      <Header title="My Wishlist" showBackButton={false} showCart />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      <View style={[styles.headerContainer, { backgroundColor: colors.bg }]}>
+        <Header title="My Wishlist" showBackButton={false} showCart />
+      </View>
 
       {items.length === 0 ? (
         <View style={styles.emptyContainer}>
           {/* @ts-ignore */}
-          <Heart size={80} color={Colors.primary} strokeWidth={1.5} />
-          <Text style={styles.emptyTitle}>No items in wishlist</Text>
-          <Text style={styles.emptySubtitle}>
+          <Heart size={80} color={colors.primary} strokeWidth={1.5} />
+          <Text style={[styles.emptyTitle, { color: colors.dark }]}>No items in wishlist</Text>
+          <Text style={[styles.emptySubtitle, { color: colors.gray }]}>
             Add fruits to your wishlist to save them!
           </Text>
         </View>
@@ -68,18 +72,18 @@ export default function WatchlistScreen() {
           keyExtractor={(item) => item._id}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={styles.wishlistItem}
+              style={[styles.wishlistItem, { backgroundColor: colors.white }]}
               onPress={() => handleProductPress(item.productId)}
               activeOpacity={0.7}
             >
               <View style={styles.itemContent}>
-                <Text style={styles.itemName}>
+                <Text style={[styles.itemName, { color: colors.dark }]}>
                   {item.product?.name || "Product"}
                 </Text>
-                <Text style={styles.itemPrice}>
+                <Text style={[styles.itemPrice, { color: colors.primary }]}>
                   ${item.product?.price?.toFixed(2) || "0.00"}
                 </Text>
-                <Text style={styles.savedDate}>
+                <Text style={[styles.savedDate, { color: colors.gray }]}>
                   Saved {new Date(item.createdAt || "").toLocaleDateString()}
                 </Text>
               </View>
@@ -104,7 +108,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.bg,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+    // paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+  },
+  headerContainer: {
+    // Optional formatting
   },
   emptyContainer: {
     flex: 1,

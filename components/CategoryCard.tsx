@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Colors, Spacing, BorderRadius, FontSizes } from "@/constants/theme";
+import { useTheme } from "@/hooks/useTheme";
 
 interface CategoryCardProps {
   id: string;
@@ -21,22 +22,27 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
   textColor,
   small = false,
 }) => {
-  const colors = [
+  const { colors, isDark } = useTheme();
+
+  const defaultColors = [
     Colors.primary,
     Colors.secondary,
     Colors.success,
     Colors.warning,
   ];
-  const randomBgColor = backgroundColor || colors[Math.floor(Math.random() * colors.length)];
+  const randomBgColor = backgroundColor || defaultColors[Math.floor(Math.random() * defaultColors.length)];
 
   if (small) {
+    // Determine textColor properly if not provided
+    const labelColor = textColor || colors.dark;
+
     return (
       <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
         <View style={styles.smallWrap}>
           <View style={[styles.smallContainer, { backgroundColor: randomBgColor }]}>
             <Text style={styles.smallIcon}>{icon || "🍓"}</Text>
           </View>
-          <Text style={[styles.smallLabel, textColor ? { color: textColor } : null]}>{name}</Text>
+          <Text style={[styles.smallLabel, { color: labelColor }]}>{name}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -102,7 +108,6 @@ const styles = StyleSheet.create({
   smallLabel: {
     marginTop: Spacing.xs,
     fontSize: FontSizes.sm,
-    color: Colors.dark,
     textAlign: "center",
   },
 });

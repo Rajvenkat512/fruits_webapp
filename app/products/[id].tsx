@@ -24,12 +24,13 @@ import { reviewService, ReviewResponse } from "@/services/review.service";
 import { useCartStore } from "@/store/cart.store";
 import { useWatchlistStore } from "@/store/watchlist.store";
 import { Colors, Spacing, FontSizes, BorderRadius } from "@/constants/theme";
-
+import { useTheme } from "@/hooks/useTheme";
 
 const { width, height } = Dimensions.get("window");
 
 export default function ProductDetailScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -148,8 +149,8 @@ export default function ProductDetailScreen() {
 
   if (isLoading || !product) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.bg }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -159,15 +160,17 @@ export default function ProductDetailScreen() {
   const discount = 30; // Mock discount
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-      <Header
-        title="Product Details"
-        showBackButton
-        showCart
-        showShare
-        rightAction={handleShare}
-      />
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} translucent backgroundColor="transparent" />
+      <View style={[styles.headerContainer, { backgroundColor: colors.bg }]}>
+        <Header
+          title="Product Details"
+          showBackButton
+          showCart
+          showShare
+          rightAction={handleShare}
+        />
+      </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Image Section */}
@@ -181,72 +184,72 @@ export default function ProductDetailScreen() {
 
         {/* Content */}
         <View style={styles.content}>
-          <Text style={styles.title}>{product.name}</Text>
+          <Text style={[styles.title, { color: colors.dark }]}>{product.name}</Text>
 
           <View style={styles.ratingRow}>
-            <Text style={styles.price}>${product.price.toFixed(2)}</Text>
+            <Text style={[styles.price, { color: colors.dark }]}>${product.price.toFixed(2)}</Text>
             <Text style={styles.discount}> Save Up to {discount}%</Text>
             <Text style={styles.rating}> ⭐ {isLoading ? "..." : "5 (2k+)"}</Text>
           </View>
 
           <TouchableOpacity onPress={handleOpenReview} style={styles.writeReviewButton}>
-            <Text style={styles.writeReviewText}>Write a Review</Text>
+            <Text style={[styles.writeReviewText, { color: colors.primary }]}>Write a Review</Text>
           </TouchableOpacity>
 
           {/* Product Details */}
-          <Text style={styles.sectionTitle}>Product Details</Text>
-          <Text style={styles.description}>
+          <Text style={[styles.sectionTitle, { color: colors.dark }]}>Product Details</Text>
+          <Text style={[styles.description, { color: colors.gray }]}>
             {product.description || "Beauty products enhance personal care and self-expression. Mobile apps now make discovering trying inclusive features..."}
           </Text>
 
           {/* Reviews List */}
           <View style={styles.reviewsListContainer}>
-            <Text style={styles.sectionTitle}>Reviews ({reviews.length})</Text>
+            <Text style={[styles.sectionTitle, { color: colors.dark }]}>Reviews ({reviews.length})</Text>
             {loadingReviews ? (
-              <ActivityIndicator color={Colors.primary} />
+              <ActivityIndicator color={colors.primary} />
             ) : reviews.length === 0 ? (
-              <Text style={styles.noReviewsText}>No reviews yet. Be the first to review!</Text>
+              <Text style={[styles.noReviewsText, { color: colors.gray }]}>No reviews yet. Be the first to review!</Text>
             ) : (
               reviews.map((r) => (
-                <View key={r.id} style={styles.reviewCard}>
+                <View key={r.id} style={[styles.reviewCard, { backgroundColor: colors.white }]}>
                   <View style={styles.reviewHeader}>
                     <View style={{ flexDirection: 'row' }}>
                       {[1, 2, 3, 4, 5].map(s => (
-                        <Star key={s} size={14} color={s <= r.rating ? "#FFD700" : "#EEE"} fill={s <= r.rating ? "#FFD700" : "none"} />
+                        <Star key={s} size={14} color={s <= r.rating ? "#FFD700" : (isDark ? "#555" : "#EEE")} fill={s <= r.rating ? "#FFD700" : "none"} />
                       ))}
                     </View>
-                    <Text style={styles.reviewDate}>{new Date(r.createdAt).toLocaleDateString()}</Text>
+                    <Text style={[styles.reviewDate, { color: colors.gray }]}>{new Date(r.createdAt).toLocaleDateString()}</Text>
                   </View>
-                  <Text style={styles.reviewComment}>{r.comment}</Text>
+                  <Text style={[styles.reviewComment, { color: colors.dark }]}>{r.comment}</Text>
                 </View>
               ))
             )}
           </View>
 
           {/* Quantity Selector */}
-          <Text style={styles.sectionTitle}>Quantity</Text>
+          <Text style={[styles.sectionTitle, { color: colors.dark }]}>Quantity</Text>
           <View style={styles.quantityRow}>
-            <TouchableOpacity onPress={decrementQuantity} style={styles.quantityButton}>
-              <Minus size={22} color={Colors.dark} />
+            <TouchableOpacity onPress={decrementQuantity} style={[styles.quantityButton, { backgroundColor: colors.white, borderColor: colors.border }]}>
+              <Minus size={22} color={colors.dark} />
             </TouchableOpacity>
-            <Text style={styles.quantityText}>{quantity}</Text>
-            <TouchableOpacity onPress={incrementQuantity} style={styles.quantityButton}>
-              <Plus size={22} color={Colors.dark} />
+            <Text style={[styles.quantityText, { color: colors.dark }]}>{quantity}</Text>
+            <TouchableOpacity onPress={incrementQuantity} style={[styles.quantityButton, { backgroundColor: colors.white, borderColor: colors.border }]}>
+              <Plus size={22} color={colors.dark} />
             </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
 
       {/* Bottom Bar */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.white, borderTopColor: colors.border }]}>
         <TouchableOpacity
-          style={styles.wishlist}
+          style={[styles.wishlist, { backgroundColor: isDark ? colors.lightGray : "#ECFDF5" }]}
           onPress={handleToggleWatchlist}
         >
           <Heart
             size={22}
-            color={isFavorite ? Colors.danger : Colors.primary}
-            fill={isFavorite ? Colors.danger : "none"}
+            color={isFavorite ? colors.danger : colors.primary}
+            fill={isFavorite ? colors.danger : "none"}
           />
         </TouchableOpacity>
 
@@ -276,15 +279,15 @@ export default function ProductDetailScreen() {
         onRequestClose={() => setIsReviewModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Write a Review</Text>
+          <View style={[styles.modalContent, { backgroundColor: colors.white }]}>
+            <Text style={[styles.modalTitle, { color: colors.dark }]}>Write a Review</Text>
 
             <View style={styles.starsContainer}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <TouchableOpacity key={star} onPress={() => setReviewRating(star)}>
                   <Star
                     size={32}
-                    color={star <= reviewRating ? "#FFD700" : "#E0E0E0"}
+                    color={star <= reviewRating ? "#FFD700" : (isDark ? "#555" : "#E0E0E0")}
                     fill={star <= reviewRating ? "#FFD700" : "none"}
                   />
                 </TouchableOpacity>
@@ -292,8 +295,9 @@ export default function ProductDetailScreen() {
             </View>
 
             <TextInput
-              style={styles.commentInput}
+              style={[styles.commentInput, { backgroundColor: isDark ? colors.bg : '#F5F6FA', color: colors.dark }]}
               placeholder="Share your thoughts about this product..."
+              placeholderTextColor={colors.gray}
               value={reviewComment}
               onChangeText={setReviewComment}
               multiline
@@ -302,13 +306,13 @@ export default function ProductDetailScreen() {
 
             <View style={styles.modalButtons}>
               <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
+                style={[styles.modalButton, styles.cancelButton, { backgroundColor: isDark ? colors.bg : '#F5F6FA' }]}
                 onPress={() => setIsReviewModalVisible(false)}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.modalButton, styles.saveButton]}
+                style={[styles.modalButton, styles.saveButton, { backgroundColor: colors.primary }]}
                 onPress={handleSubmitReview}
                 disabled={isSubmittingReview}
               >
@@ -320,21 +324,23 @@ export default function ProductDetailScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.bg,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+    // Background color handled dynamically
+  },
+  headerContainer: {
+    // Background color handled dynamically
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: Colors.white,
+    // Background color handled dynamically
   },
   scrollContent: {
     paddingBottom: 100,
@@ -356,7 +362,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FontSizes.xl,
     fontWeight: "700",
-    color: Colors.dark,
+    // Color handled dynamically
   },
   ratingRow: {
     flexDirection: "row",
@@ -366,7 +372,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: FontSizes.lg,
     fontWeight: "700",
-    color: Colors.dark,
+    // Color handled dynamically
   },
   discount: {
     color: Colors.success,
@@ -378,12 +384,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontWeight: "700",
-    color: Colors.dark,
+    // Color handled dynamically
     marginTop: Spacing.md,
     marginBottom: Spacing.sm,
   },
   description: {
-    color: Colors.gray,
+    // Color handled dynamically
     lineHeight: 20,
     fontSize: FontSizes.sm,
   },
@@ -396,16 +402,15 @@ const styles = StyleSheet.create({
     width: 45,
     height: 45,
     borderRadius: BorderRadius.lg,
-    backgroundColor: Colors.white,
+    // Background and border handled dynamically
     borderWidth: 1,
-    borderColor: "#e5e5e5",
     justifyContent: "center",
     alignItems: "center",
   },
   quantityText: {
     fontSize: FontSizes.xl,
     fontWeight: "600",
-    color: Colors.dark,
+    // Color handled dynamically
     minWidth: 30,
     textAlign: "center",
   },
@@ -416,16 +421,15 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: "row",
     padding: Spacing.lg,
-    backgroundColor: Colors.white,
+    // Background and border handled dynamically
     alignItems: "center",
     borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
   },
   wishlist: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "#ECFDF5",
+    // Background handled dynamically
     justifyContent: "center",
     alignItems: "center",
     marginRight: Spacing.md,
@@ -438,7 +442,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   orderText: {
-    color: Colors.dark,
+    color: Colors.dark, // Keep dark text on the light green/gray button
     fontSize: FontSizes.md,
   },
   writeReviewButton: {
@@ -446,10 +450,10 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   writeReviewText: {
-    color: Colors.primary,
     fontWeight: '600',
     fontSize: 14,
     textDecorationLine: 'underline',
+    // Color handled dynamically
   },
   modalOverlay: {
     flex: 1,
@@ -457,7 +461,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: Colors.white,
+    // Background handled dynamically
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     padding: 25,
@@ -466,7 +470,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: Colors.dark,
+    // Color handled dynamically
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -477,14 +481,13 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   commentInput: {
-    backgroundColor: '#F5F6FA',
+    // Background and Color handled dynamically
     padding: 15,
     borderRadius: 12,
     height: 100,
     textAlignVertical: 'top',
     marginBottom: 20,
     fontSize: 14,
-    color: Colors.dark,
   },
   modalButtons: {
     flexDirection: 'row',
@@ -497,11 +500,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#F5F6FA',
+    // Background handled dynamically
     marginRight: 10,
   },
   saveButton: {
-    backgroundColor: Colors.primary,
+    // Background handled dynamically
     marginLeft: 10,
   },
   cancelButtonText: {
@@ -517,12 +520,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   noReviewsText: {
-    color: Colors.gray,
+    // Color handled dynamically
     fontStyle: 'italic',
     marginTop: 10,
   },
   reviewCard: {
-    backgroundColor: '#F9F9F9',
+    // Background handled dynamically
     padding: 15,
     borderRadius: 12,
     marginBottom: 10,
@@ -533,11 +536,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   reviewDate: {
-    color: Colors.gray,
+    // Color handled dynamically
     fontSize: 12,
   },
   reviewComment: {
-    color: Colors.dark,
+    // Color handled dynamically
     fontSize: 14,
     lineHeight: 20,
   },

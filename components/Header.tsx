@@ -5,12 +5,15 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { ChevronLeft, ShoppingCart, Heart, Share2, LogOut } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useCartStore } from "@/store/cart.store";
 import { useWatchlistStore } from "@/store/watchlist.store";
 import { Colors, Spacing, FontSizes } from "@/constants/theme";
+import { useTheme } from "@/hooks/useTheme";
 
 interface HeaderProps {
   title?: string;
@@ -32,6 +35,7 @@ export const Header: React.FC<HeaderProps> = ({
   rightIcon,
 }) => {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const cartItems = useCartStore((state) => state.items);
   const watchlistItems = useWatchlistStore((state) => state.items);
 
@@ -45,14 +49,14 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isDark ? '#1E1E1E' : colors.primary, borderBottomWidth: 0 }]}>
       <View style={styles.header}>
         {/* Left Section - Profile or Back */}
         <View style={styles.leftSection}>
           {showBackButton ? (
             <TouchableOpacity onPress={handleBack} style={styles.backButton}>
               {/* @ts-ignore */}
-              <ChevronLeft size={24} color={Colors.dark} />
+              <ChevronLeft size={24} color={Colors.white} />
             </TouchableOpacity>
           ) : (
             <TouchableOpacity onPress={() => router.push("/(tabs)/profile")} style={styles.profileButton}>
@@ -66,22 +70,17 @@ export const Header: React.FC<HeaderProps> = ({
         </View>
 
         {/* Center Section */}
-        <Text style={styles.title} numberOfLines={1}>{title}</Text>
+        <Text style={[styles.title, { color: Colors.white }]} numberOfLines={1}>{title}</Text>
 
         {/* Right Section */}
         <View style={styles.rightSection}>
           {showShare && (
             <TouchableOpacity
               style={styles.iconButton}
-              onPress={rightAction} // Assuming share is the right action if showShare is true, or strictly separate?
-            // Actually typically share is a specific action. I'll make it use rightAction if provided, or a specific prop.
-            // For now, if showShare is true, I'll just render the icon. The 'rightAction' might be for something else.
-            // But usually the rightmost button is 'rightAction'.
-            // Let's assume rightAction is properly passed for the specific button needed.
-            // But wait, the user wants 'share' on product page.
+              onPress={rightAction}
             >
               {/* @ts-ignore */}
-              <Share2 size={24} color={Colors.dark} strokeWidth={1.5} />
+              <Share2 size={20} color={Colors.white} strokeWidth={2} />
             </TouchableOpacity>
           )}
 
@@ -91,9 +90,9 @@ export const Header: React.FC<HeaderProps> = ({
               onPress={() => router.push("/(tabs)/watchlist")}
             >
               {/* @ts-ignore */}
-              <Heart size={24} color={Colors.dark} strokeWidth={1.5} />
+              <Heart size={20} color={Colors.white} strokeWidth={2} />
               {watchlistCount > 0 && (
-                <View style={styles.badge}>
+                <View style={[styles.badge, { backgroundColor: colors.danger }]}>
                   <Text style={styles.badgeText}>
                     {watchlistCount > 99 ? "99+" : watchlistCount}
                   </Text>
@@ -108,9 +107,9 @@ export const Header: React.FC<HeaderProps> = ({
               onPress={() => router.push("/(tabs)/cart")}
             >
               {/* @ts-ignore */}
-              <ShoppingCart size={24} color={Colors.dark} strokeWidth={1.5} />
+              <ShoppingCart size={20} color={Colors.white} strokeWidth={2} />
               {cartCount > 0 && (
-                <View style={styles.badge}>
+                <View style={[styles.badge, { backgroundColor: colors.danger }]}>
                   <Text style={styles.badgeText}>
                     {cartCount > 99 ? "99+" : cartCount}
                   </Text>
@@ -125,7 +124,7 @@ export const Header: React.FC<HeaderProps> = ({
               onPress={rightAction}
               style={styles.actionButton}
             >
-              {rightIcon ? rightIcon : <LogOut size={24} color={Colors.dark} strokeWidth={1.5} />}
+              {rightIcon ? rightIcon : <LogOut size={20} color={Colors.white} strokeWidth={2} />}
             </TouchableOpacity>
           )}
         </View>
@@ -136,18 +135,18 @@ export const Header: React.FC<HeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.white,
-    borderBottomWidth: 0.5,
-    borderBottomColor: Colors.border,
-    // Removed top padding as requested
+    // backgroundColor handled dynamically
+    // borderBottomWidth: 0.5,
+    // borderBottomColor handled dynamically
     paddingBottom: Spacing.sm,
+    paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 24) + 10 : 50, // Add status bar height + padding
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: Spacing.md,
-    height: 40, // Slightly reduced height
+    height: 40,
   },
   leftSection: {
     flex: 1,
@@ -162,11 +161,15 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: Spacing.xs,
+    backgroundColor: 'rgba(255,255,255,0.2)', // Light translucent background for icons on colored header
+    borderRadius: 20,
   },
   profileButton: {
     padding: 0,
     borderRadius: 20,
     overflow: "hidden",
+    borderWidth: 2,
+    borderColor: Colors.white,
   },
   avatar: {
     width: 36,
@@ -175,25 +178,31 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 2,
-    fontSize: FontSizes.lg,
-    fontWeight: "700",
-    color: Colors.dark,
+    fontSize: FontSizes.xl, // Larger title like "Inbox"
+    fontWeight: "800",
+    // color handled dynamically
     textAlign: "center",
+    // textTransform: "uppercase", // "Inbox" isn't uppercase usually, but checking previous preference. User said "same" as image. "Inbox" image is Title Case.
+    // However, previous request was specifically for uppercase. I'll stick to the "Inbox" image style: Title Case, Bold.
   },
   iconButton: {
     position: "relative",
     padding: Spacing.xs,
+    backgroundColor: 'rgba(255,255,255,0.2)', // Light translucent background for icons on colored header
+    borderRadius: 20,
+    marginLeft: 4,
   },
   badge: {
     position: "absolute",
     top: -5,
     right: -5,
-    backgroundColor: Colors.danger,
     borderRadius: 10,
     minWidth: 20,
     height: 20,
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: Colors.white,
   },
   badgeText: {
     color: Colors.white,
@@ -202,5 +211,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     padding: Spacing.xs,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
   },
 });

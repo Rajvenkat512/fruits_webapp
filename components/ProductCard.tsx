@@ -3,6 +3,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
 import { Heart } from "lucide-react-native";
 import { Colors, Spacing, BorderRadius, FontSizes } from "@/constants/theme";
+import { useTheme } from "@/hooks/useTheme";
 
 interface ProductCardProps {
   id: string;
@@ -16,7 +17,7 @@ interface ProductCardProps {
   onToggleWatchlist?: () => void;
   isInWatchlist?: boolean;
   compact?: boolean;
-  style?: object; // Added for custom height/width from parent
+  style?: object;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -33,20 +34,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   compact = false,
   style,
 }) => {
+  const { colors, isDark } = useTheme();
   const inStock = stock > 0;
 
   return (
     <TouchableOpacity
       style={[
         styles.container,
+        { backgroundColor: colors.white },
         compact && styles.containerCompact,
-        style // Apply custom style from parent (height/width)
+        style
       ]}
       onPress={onPress}
       activeOpacity={0.7}
     >
       {/* Image Container */}
-      <View style={[styles.imageContainer, compact && styles.imageContainerCompact]}>
+      <View style={[styles.imageContainer, { backgroundColor: colors.bg }, compact && styles.imageContainerCompact]}>
         <Image
           source={{ uri: image }}
           style={styles.image}
@@ -68,7 +71,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <TouchableOpacity
             style={[
               styles.wishlistButton,
-              isInWatchlist && styles.wishlistButtonActive,
+              isInWatchlist && { backgroundColor: colors.white },
             ]}
             onPress={onToggleWatchlist}
           >
@@ -84,26 +87,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </View>
 
       <View style={[styles.content, compact && styles.contentCompact]}>
-        <Text style={[styles.name, compact && styles.nameCompact]} numberOfLines={1}>
+        <Text style={[styles.name, { color: colors.dark }, compact && styles.nameCompact]} numberOfLines={1}>
           {name}
         </Text>
         {description && (
-          <Text style={[styles.description, compact && styles.descriptionCompact]} numberOfLines={2}>
+          <Text style={[styles.description, { color: colors.gray }, compact && styles.descriptionCompact]} numberOfLines={2}>
             {description}
           </Text>
         )}
         <View style={styles.footerRow}>
-          <Text style={[styles.price, compact && styles.priceCompact]}>
+          <Text style={[styles.price, { color: colors.dark }, compact && styles.priceCompact]}>
             ${price.toFixed(2)}
           </Text>
 
           <TouchableOpacity
-            style={[styles.addToCartButton, !inStock && styles.disabledButton]}
+            style={[styles.addToCartButton, { backgroundColor: colors.dark }, !inStock && styles.disabledButton]}
             onPress={onAddToCart}
             disabled={!inStock}
             activeOpacity={0.8}
           >
-            <Text style={styles.addToCartText}>Add to Cart</Text>
+            <Text style={[styles.addToCartText, { color: colors.white }]}>Add to Cart</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -113,7 +116,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.white,
     borderRadius: BorderRadius.lg,
     overflow: "hidden",
     elevation: 3,
@@ -121,19 +123,16 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 4, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    // NO margins - parent handles spacing
   },
   containerCompact: {
-    // NO fixed width - uses 100% of parent container
   },
   imageContainer: {
     position: "relative",
     width: "100%",
     height: 160,
-    backgroundColor: Colors.bg,
   },
   imageContainerCompact: {
-    height: 120, // Increased for better proportions in grid
+    height: 120,
   },
   image: {
     width: "100%",
@@ -180,9 +179,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  wishlistButtonActive: {
-    backgroundColor: Colors.white,
-  },
   content: {
     padding: Spacing.md,
     flex: 1,
@@ -193,7 +189,6 @@ const styles = StyleSheet.create({
   name: {
     fontSize: FontSizes.md,
     fontWeight: "600",
-    color: Colors.dark,
     marginBottom: Spacing.xs,
     lineHeight: 20,
   },
@@ -203,7 +198,6 @@ const styles = StyleSheet.create({
   price: {
     fontSize: FontSizes.lg,
     fontWeight: "600",
-    color: Colors.dark,
   },
   priceCompact: {
     fontSize: FontSizes.md,
@@ -215,13 +209,11 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   addToCartButton: {
-    backgroundColor: Colors.dark,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 10,
   },
   addToCartText: {
-    color: Colors.white,
     fontWeight: "500",
     fontSize: 10,
   },
@@ -231,7 +223,6 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: FontSizes.sm,
-    color: Colors.gray,
     marginBottom: Spacing.xs,
   },
   descriptionCompact: {
